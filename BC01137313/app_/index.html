@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frases de Programación</title>
+  <script src="https://unpkg.com/vue@3.2.47/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    table {
+      width: 70%;
+      border-collapse: collapse;
+      background-color: #fff;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 120px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .dropdown-content button {
+      color: #333;
+      padding: 8px 12px;
+      text-decoration: none;
+      display: block;
+      width: 100%;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .dropdown-content button:hover {
+      background-color: #f9f9f9;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .dropdown button.dropdown-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #4CAF50;
+    }
+
+    input[type="text"] {
+      width: calc(100% - 20px);
+      padding: 8px;
+      margin: 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .selected-phrase {
+      background-color: #e2f4e6;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+      color: #333;
+    }
+
+    .add-button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .add-button:hover {
+      background-color: #45a049;
+    }
+
+    .new-phrase-form {
+      width: 25%;
+      background-color: #fff;
+      padding: 20px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      border-radius: 10px;
+    }
+
+    .new-phrase-form h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .new-phrase-form input {
+      width: calc(100% - 20px);
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .new-phrase-form button {
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .new-phrase-form button:hover {
+      background-color: #45a049;
+    }
+
+    /* Estilos para el área de notificaciones */
+    .notification {
+      padding: 10px;
+      background-color: #e1f5fe;
+      color: #0288d1;
+      border: 1px solid #b3e5fc;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: none; /* Ocultamos el área de notificaciones por defecto */
+    }
+
+    .notification.show {
+      display: block; /* Muestra el área de notificaciones cuando tiene la clase "show" */
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app" class="container">
+    <div>
+      <h1>Frases de Programación</h1>
+      <!-- Área de notificaciones -->
+      <div v-bind:class="{ 'notification': true, 'show': mensaje }">{{ mensaje }}</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Frase</th>
+            <th>Autor</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(frase, index) in frasesOriginales" :key="index">
+            <td>
+              <div v-if="editando === index">
+                <input v-model="fraseEditada.frases" type="text" />
+              </div>
+              <div v-else>
+                {{ frase.frases }}
+              </div>
+            </td>
+            <td>
+              <div v-if="editando === index">
+                <input v-model="fraseEditada.autor" type="text" />
+              </div>
+              <div v-else>
+                {{ frase.autor }}
+              </div>
+            </td>
+            <td>
+              <div class="dropdown">
+                <button class="dropdown-toggle">▼</button>
+                <div class="dropdown-content">
+                  <button v-if="editando !== index" @click="editarFrase(index)">Editar</button>
+                  <button v-if="editando === index" @click="guardarEdicion(index)">Guardar</button>
+                  <button @click="eliminarFrase(index)">Eliminar</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-if="fraseSeleccionada !== null" class="selected-phrase">
+        <h2>Frase seleccionada:</h2>
+        <p>{{ frasesOriginales[fraseSeleccionada].frases }} - 
+          <strong>{{ frasesOriginales[fraseSeleccionada].autor }}</strong>
+        </p>
+      </div>
+    </div>
+
+    <div class="new-phrase-form">
+      <h2>Añadir Nueva Frase</h2>
+      <input v-model="nuevaFrase.frases" type="text" placeholder="Nueva frase" />
+      <input v-model="nuevaFrase.autor" type="text" placeholder="Autor" />
+      <button @click="agregarFrase">Agregar</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
